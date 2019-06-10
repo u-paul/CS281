@@ -18,9 +18,34 @@ warnings.filterwarnings('ignore')
 random.seed()
 
 csv_path        = '../data/p_data'
-simple_test     = 'simple_test'
 
-def parse_images(images_csv=simple_test):
+def parse_uninfected(images_csv='simple_test'):
+	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
+
+	df = pd.read_csv(full_csv_path)
+	df_uninfected = df.loc[df['ClassName'] == 'uninfected']
+	print(df_uninfected.head())
+	i = 1
+	for idx, row in df_uninfected.iterrows():
+		img = cv2.imread((row['FileName']))
+		# height, width = 110,130
+		x1 = int(row['CMin'] * 1)
+		x2 = int(row['CMax'] * 1)
+		y1 = int(row['RMin'] * 1)
+		y2 = int(row['RMax'] * 1)
+		cell = img[y1:y2, x1:x2]
+
+		img_path = os.path.join(csv_path, 'uninfected', images_csv, str(i))
+		cv2.imwrite(img_path+'.png', cell)
+
+		i += 1
+		# plt.imshow(cell)
+		# plt.show()
+		if (i % 100 == 0):
+			print('{:<10} {}'.format('Finished', str(i)))
+
+
+def parse_infected(images_csv='simple_test'):
 	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
 
 	df = pd.read_csv(full_csv_path)
@@ -39,7 +64,7 @@ def parse_images(images_csv=simple_test):
 		r45, r75, bl = augment_image(cell)
 		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
 
-		img_path = os.path.join(csv_path, images_csv, str(i))
+		img_path = os.path.join(csv_path, 'infected', images_csv, str(i))
 		cv2.imwrite(img_path+'.png', cell)
 		cv2.imwrite(img_path+'_45.png', r45)
 		cv2.imwrite(img_path+'_75.png', r75)
@@ -49,7 +74,7 @@ def parse_images(images_csv=simple_test):
 		i += 1
 		# plt.imshow(cell)
 		# plt.show()
-		if (i % 10 == 0):
+		if (i % 100 == 0):
 			print('{:<10} {}'.format('Finished', str(i)))
 
 
@@ -64,15 +89,31 @@ def augment_image(img_array):
 
 
 def scale_and_move(img, x1, x2, y1, y2):
-	scale = random.randint(40,70)
-	move  = random.randint(-40, 40)
-	mv_cell = img[y1-scale+move:y2+scale+move, x1-scale+move:x2+scale+move]
+	try:
+		scale = random.randint(40,70)
+		move  = random.randint(-40, 40)
+		
+		new_y1 = y1-scale+move
+		if new_y1 < 0: new_y1 = 0
+		new_y2 = y2+scale+move
+		if new_y2 < 0: new_y2 = 0
+		new_x1 = x1-scale+move
+		if new_x1 < 0: new_x1 = 0
+		new_x2 = x2+scale+move
+		if new_x2 < 0: new_x2 = 0
 
+		mv_cell = img[y1-scale+move:y2+scale+move, x1-scale+move:x2+scale+move]
+	except Exception as e:
+		print("Exception: {}".format(e))
+		exit()
 	return mv_cell
 
 
 def main():
-	parse_images()
+	print("Splitting Infected:")
+	parse_infected()
+	print("\n\nSplitting Uninfected:")
+	# parse_uninfected()
 
 
 if __name__ == "__main__":
