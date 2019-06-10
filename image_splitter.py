@@ -61,13 +61,13 @@ def parse_infected(images_csv='simple_test'):
 		y2 = int(row['RMax'] * 1)
 		cell = img[y1:y2, x1:x2]
 
-		r45, r75, bl = augment_image(cell)
+		r90, r180, bl = augment_image(cell)
 		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
 
 		img_path = os.path.join(csv_path, 'infected', images_csv, str(i))
 		cv2.imwrite(img_path+'.png', cell)
-		cv2.imwrite(img_path+'_45.png', r45)
-		cv2.imwrite(img_path+'_75.png', r75)
+		cv2.imwrite(img_path+'_90.png', r90)
+		cv2.imwrite(img_path+'_1800.png', r180)
 		cv2.imwrite(img_path+'_bl.png', bl)
 		cv2.imwrite(img_path+'_mv.png', mv_cell)
 
@@ -81,11 +81,11 @@ def parse_infected(images_csv='simple_test'):
 def augment_image(img_array):
 	img = Image.fromarray(img_array, 'RGB')
 
-	rotated45 = img.rotate(45)
-	rotated75 = img.rotate(75)
-	blur      = cv2.blur(np.array(img) ,(10,10))
+	rotated90  = img.rotate(90)
+	rotated180 = img.rotate(180)
+	blur       = cv2.blur(np.array(img) ,(10,10))
 
-	return (np.array(rotated45), np.array(rotated75), np.array(blur))
+	return (np.array(rotated90), np.array(rotated180), np.array(blur))
 
 
 def scale_and_move(img, x1, x2, y1, y2):
