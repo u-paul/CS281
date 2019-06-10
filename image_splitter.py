@@ -43,6 +43,8 @@ def parse_uninfected(images_csv='simple_test'):
 		# plt.show()
 		if (i % 100 == 0):
 			print('{:<10} {}'.format('Finished', str(i)))
+		if (i == 13000):
+			return
 
 
 def parse_infected(images_csv='simple_test'):
@@ -111,9 +113,9 @@ def scale_and_move(img, x1, x2, y1, y2):
 
 def main():
 	print("Splitting Infected:")
-	parse_infected()
+	parse_infected('simple_train')
 	print("\n\nSplitting Uninfected:")
-	# parse_uninfected()
+	parse_uninfected('simple_train')
 
 
 if __name__ == "__main__":
