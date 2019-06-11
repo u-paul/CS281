@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[19]:
+# In[1]:
 
 
 
@@ -40,7 +40,7 @@ from keras.engine import Layer, InputSpec
 from keras import initializers, regularizers
 
 
-# In[20]:
+# In[2]:
 
 
 class Config:
@@ -61,14 +61,14 @@ class Config:
 		# Anchor box scales
     # Note that if im_size is smaller, anchor_box_scales should be scaled
     # Original anchor_box_scales in the paper is [128, 256, 512]
-		self.anchor_box_scales = [128] 
+		self.anchor_box_scales = [50] 
 
 		# Anchor box ratios
-		self.anchor_box_ratios = [[1, 1]]
+		self.anchor_box_ratios = [[0.75, 0.75]]
 
 		# Size to resize the smallest side of the image
 		# Original setting in paper is 600. Set to 300 in here to save training time
-		self.im_size = 1200
+		self.im_size = 600
 
 		# image channel-wise mean to subtract
 		self.img_channel_mean = [103.939, 116.779, 123.68]
@@ -100,7 +100,7 @@ class Config:
 		self.model_path = None
 
 
-# In[21]:
+# In[3]:
 
 
 def get_data(input_path):
@@ -196,7 +196,7 @@ def get_data(input_path):
 		return all_data, classes_count, class_mapping
 
 
-# In[22]:
+# In[4]:
 
 
 class RoiPoolingConv(Layer):
@@ -281,7 +281,7 @@ class RoiPoolingConv(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-# In[23]:
+# In[5]:
 
 
 def get_img_output_length(width, height):
@@ -336,7 +336,7 @@ def nn_base(input_tensor=None, trainable=False):
     return x
 
 
-# In[24]:
+# In[6]:
 
 
 def rpn_layer(base_layers, num_anchors):
@@ -364,10 +364,10 @@ def rpn_layer(base_layers, num_anchors):
     return [x_class, x_regr, base_layers]
 
 
-# In[25]:
+# In[7]:
 
 
-def classifier_layer(base_layers, input_rois, num_rois, nb_classes = 4):
+def classifier_layer(base_layers, input_rois, num_rois, nb_classes = 2):
     """Create a classifier layer
     
     Args:
@@ -406,7 +406,7 @@ def classifier_layer(base_layers, input_rois, num_rois, nb_classes = 4):
     return [out_class, out_regr]
 
 
-# In[26]:
+# In[8]:
 
 
 def union(au, bu, area_intersection):
@@ -438,7 +438,7 @@ def iou(a, b):
 	return float(area_i) / float(area_u + 1e-6)
 
 
-# In[27]:
+# In[9]:
 
 
 def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_length_calc_function):
@@ -639,7 +639,7 @@ def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_leng
 	return np.copy(y_rpn_cls), np.copy(y_rpn_regr), num_pos
 
 
-# In[28]:
+# In[10]:
 
 
 def get_new_img_size(width, height, img_min_side=300):
@@ -724,7 +724,7 @@ def augment(img_data, config, augment=True):
 	return img_data_aug, img
 
 
-# In[29]:
+# In[11]:
 
 
 def get_anchor_gt(all_img_data, C, img_length_calc_function, mode='train'):
@@ -798,7 +798,7 @@ def get_anchor_gt(all_img_data, C, img_length_calc_function, mode='train'):
 				continue
 
 
-# In[30]:
+# In[12]:
 
 
 lambda_rpn_regr = 1.0
@@ -810,7 +810,7 @@ lambda_cls_class = 1.0
 epsilon = 1e-4
 
 
-# In[31]:
+# In[13]:
 
 
 def rpn_loss_regr(num_anchors):
@@ -876,7 +876,7 @@ def class_loss_cls(y_true, y_pred):
     return lambda_cls_class * K.mean(categorical_crossentropy(y_true[0, :, :], y_pred[0, :, :]))
 
 
-# In[32]:
+# In[14]:
 
 
 def non_max_suppression_fast(boxes, probs, overlap_thresh=0.9, max_boxes=300):
@@ -1122,7 +1122,7 @@ def calc_iou(R, img_data, C, class_mapping):
     return np.expand_dims(X, axis=0), np.expand_dims(Y1, axis=0), np.expand_dims(Y2, axis=0), IoUs
 
 
-# In[33]:
+# In[15]:
 
 
 def rpn_to_roi(rpn_layer, regr_layer, C, dim_ordering, use_regr=True, max_boxes=300,overlap_thresh=0.9):
@@ -1228,12 +1228,12 @@ def rpn_to_roi(rpn_layer, regr_layer, C, dim_ordering, use_regr=True, max_boxes=
 	return result
 
 
-# In[34]:
+# In[16]:
 
 
 base_path = '../data/p_data'
 
-train_path =  '../data/p_data/annotation.txt' # Training data (annotation file)
+train_path =  '../data/p_data/annotation_IvU.txt' # Training data (annotation file)
 
 num_rois = 4 # Number of RoIs to process at once.
 
@@ -1251,7 +1251,7 @@ base_weight_path = os.path.join(base_path, 'model/vgg16_weights_tf_dim_ordering_
 config_output_filename = os.path.join(base_path, 'model_vgg_config.pickle')
 
 
-# In[35]:
+# In[17]:
 
 
 
@@ -1269,7 +1269,7 @@ C.num_rois = num_rois
 C.base_net_weights = base_weight_path
 
 
-# In[ ]:
+# In[18]:
 
 
 
@@ -1282,7 +1282,7 @@ print()
 print('Spend %0.2f mins to load the data' % ((time.time()-st)/60) )
 
 
-# In[ ]:
+# In[19]:
 
 
 if 'bg' not in classes_count:
@@ -1304,7 +1304,7 @@ with open(config_output_filename, 'wb') as config_f:
 	print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(config_output_filename))
 
 
-# In[ ]:
+# In[20]:
 
 
 random.seed(1)
@@ -1313,20 +1313,20 @@ random.shuffle(train_imgs)
 print('Num train samples (images) {}'.format(len(train_imgs)))
 
 
-# In[ ]:
+# In[21]:
 
 
 
 data_gen_train = get_anchor_gt(train_imgs, C, get_img_output_length, mode='train')
 
 
-# In[ ]:
+# In[22]:
 
 
 X, Y, image_data, debug_img, debug_num_pos = next(data_gen_train)
 
 
-# In[ ]:
+# In[23]:
 
 
 print('Original image: height=%d width=%d'%(image_data['height'], image_data['width']))
@@ -1390,9 +1390,9 @@ else:
 
             idx = pos_regr[2][i*4]/4
 #             anchor_size = C.anchor_box_scales[int(idx/3)]
-            anchor_size = 128
+            anchor_size = 50
 #             anchor_ratio = C.anchor_box_ratios[2-int((idx+1)%3)]
-            anchor_ratio =[1,1]
+            anchor_ratio = [[0.75, 0.75]]
             center = (pos_regr[1][i*4]*C.rpn_stride, pos_regr[0][i*4]*C.rpn_stride)
             print('Center position of positive anchor: ', center)
             cv2.circle(img, center, 3, color, -1)
@@ -1409,7 +1409,7 @@ plt.imshow(img)
 plt.show()
 
 
-# In[ ]:
+# In[24]:
 
 
 input_shape_img = (None, None, 3)
@@ -1421,7 +1421,7 @@ roi_input = Input(shape=(None, 4))
 shared_layers = nn_base(img_input, trainable=True)
 
 
-# In[ ]:
+# In[25]:
 
 
 num_anchors = len(C.anchor_box_scales) * len(C.anchor_box_ratios) # 9
@@ -1472,7 +1472,7 @@ else:
     print('Already train %dK batches'% (len(record_df)))
 
 
-# In[ ]:
+# In[26]:
 
 
 optimizer = Adam(lr=1e-5)
@@ -1482,14 +1482,14 @@ model_classifier.compile(optimizer=optimizer_classifier, loss=[class_loss_cls, c
 model_all.compile(optimizer='sgd', loss='mae')
 
 
-# In[ ]:
+# In[27]:
 
 
 total_epochs = len(record_df)
 r_epochs = len(record_df)
 
-epoch_length = 10
-num_epochs = 4
+epoch_length = 2
+num_epochs = 100
 iter_num = 0
 
 total_epochs += num_epochs
@@ -1504,13 +1504,13 @@ else:
     best_loss = np.min(r_curr_loss)
 
 
-# In[ ]:
+# In[28]:
 
 
 print(len(record_df))
 
 
-# In[ ]:
+# In[29]:
 
 
 start_time = time.time()
@@ -1668,4 +1668,487 @@ for epoch_num in range(num_epochs):
             continue
 
 print('Training complete, exiting.')
+
+
+# In[30]:
+
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['mean_overlapping_bboxes'], 'r')
+plt.title('mean_overlapping_bboxes')
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['class_acc'], 'r')
+plt.title('class_acc')
+
+plt.show()
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['loss_rpn_cls'], 'r')
+plt.title('loss_rpn_cls')
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['loss_rpn_regr'], 'r')
+plt.title('loss_rpn_regr')
+plt.show()
+
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['loss_class_cls'], 'r')
+plt.title('loss_class_cls')
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['loss_class_regr'], 'r')
+plt.title('loss_class_regr')
+plt.show()
+
+plt.plot(np.arange(0, r_epochs), record_df['curr_loss'], 'r')
+plt.title('total_loss')
+plt.show()
+
+# plt.figure(figsize=(15,5))
+# plt.subplot(1,2,1)
+# plt.plot(np.arange(0, r_epochs), record_df['curr_loss'], 'r')
+# plt.title('total_loss')
+# plt.subplot(1,2,2)
+# plt.plot(np.arange(0, r_epochs), record_df['elapsed_time'], 'r')
+# plt.title('elapsed_time')
+# plt.show()
+
+# plt.title('loss')
+# plt.plot(np.arange(0, r_epochs), record_df['loss_rpn_cls'], 'b')
+# plt.plot(np.arange(0, r_epochs), record_df['loss_rpn_regr'], 'g')
+# plt.plot(np.arange(0, r_epochs), record_df['loss_class_cls'], 'r')
+# plt.plot(np.arange(0, r_epochs), record_df['loss_class_regr'], 'c')
+# # plt.plot(np.arange(0, r_epochs), record_df['curr_loss'], 'm')
+# plt.show()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[31]:
+
+
+class Config:
+
+	def __init__(self):
+
+		# Print the process or not
+		self.verbose = True
+
+		# Name of base network
+		self.network = 'vgg'
+
+		# Setting for data augmentation
+		self.use_horizontal_flips = False
+		self.use_vertical_flips = False
+		self.rot_90 = False
+
+		# Anchor box scales
+    # Note that if im_size is smaller, anchor_box_scales should be scaled
+    # Original anchor_box_scales in the paper is [128, 256, 512]
+		self.anchor_box_scales = [50] 
+
+		# Anchor box ratios
+		self.anchor_box_ratios = [[1, 1]]
+
+		# Size to resize the smallest side of the image
+		# Original setting in paper is 600. Set to 300 in here to save training time
+		self.im_size = 600
+
+		# image channel-wise mean to subtract
+		self.img_channel_mean = [103.939, 116.779, 123.68]
+		self.img_scaling_factor = 1.0
+
+		# number of ROIs at once
+		self.num_rois = 4
+
+		# stride at the RPN (this depends on the network configuration)
+		self.rpn_stride = 16
+
+		self.balanced_classes = False
+
+		# scaling the stdev
+		self.std_scaling = 4.0
+		self.classifier_regr_std = [8.0, 8.0, 4.0, 4.0]
+
+		# overlaps for RPN
+		self.rpn_min_overlap = 0.3
+		self.rpn_max_overlap = 0.7
+
+		# overlaps for classifier ROIs
+		self.classifier_min_overlap = 0.1
+		self.classifier_max_overlap = 0.5
+
+		# placeholder for the class mapping, automatically generated by the parser
+		self.class_mapping = None
+
+		self.model_path = None
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[32]:
+
+
+base_path = '../data/p_data'
+
+test_path =  '../data/p_data/test_annotation.txt' # Training data (annotation file)
+test_base_path = 'malaria/images'
+config_output_filename = os.path.join(base_path, 'model_vgg_config.pickle')
+
+
+# In[33]:
+
+
+
+with open(config_output_filename, 'rb') as f_in:
+	C = pickle.load(f_in)
+
+# turn off any data augmentation at test time
+C.use_horizontal_flips = False
+C.use_vertical_flips = False
+C.rot_90 = False
+
+
+# In[34]:
+
+
+record_df = pd.read_csv(C.record_path)
+
+r_epochs = len(record_df)
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['mean_overlapping_bboxes'], 'r')
+plt.title('mean_overlapping_bboxes')
+
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['class_acc'], 'r')
+plt.title('class_acc')
+
+plt.show()
+
+plt.figure(figsize=(15,5))
+
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['loss_rpn_cls'], 'r')
+plt.title('loss_rpn_cls')
+
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['loss_rpn_regr'], 'r')
+plt.title('loss_rpn_regr')
+plt.show()
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['loss_class_cls'], 'r')
+plt.title('loss_class_cls')
+
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['loss_class_regr'], 'r')
+plt.title('loss_class_regr')
+plt.show()
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.plot(np.arange(0, r_epochs), record_df['curr_loss'], 'r')
+plt.title('total_loss')
+
+plt.subplot(1,2,2)
+plt.plot(np.arange(0, r_epochs), record_df['elapsed_time'], 'r')
+plt.title('elapsed_time')
+
+plt.show()
+
+
+# In[35]:
+
+
+def format_img_size(img, C):
+	""" formats the image size based on config """
+	img_min_side = float(C.im_size)
+	(height,width,_) = img.shape
+		
+	if width <= height:
+		ratio = img_min_side/width
+		new_height = int(ratio * height)
+		new_width = int(img_min_side)
+	else:
+		ratio = img_min_side/height
+		new_width = int(ratio * width)
+		new_height = int(img_min_side)
+	img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
+	return img, ratio	
+
+def format_img_channels(img, C):
+	""" formats the image channels based on config """
+	img = img[:, :, (2, 1, 0)]
+	img = img.astype(np.float32)
+	img[:, :, 0] -= C.img_channel_mean[0]
+	img[:, :, 1] -= C.img_channel_mean[1]
+	img[:, :, 2] -= C.img_channel_mean[2]
+	img /= C.img_scaling_factor
+	img = np.transpose(img, (2, 0, 1))
+	img = np.expand_dims(img, axis=0)
+	return img
+
+def format_img(img, C):
+	""" formats an image for model prediction based on config """
+	img, ratio = format_img_size(img, C)
+	img = format_img_channels(img, C)
+	return img, ratio
+
+# Method to transform the coordinates of the bounding box to its original size
+def get_real_coordinates(ratio, x1, y1, x2, y2):
+
+	real_x1 = int(round(x1 // ratio))
+	real_y1 = int(round(y1 // ratio))
+	real_x2 = int(round(x2 // ratio))
+	real_y2 = int(round(y2 // ratio))
+
+	return (real_x1, real_y1, real_x2 ,real_y2)
+
+
+# In[36]:
+
+
+num_features = 512
+
+input_shape_img = (None, None, 3)
+input_shape_features = (None, None, num_features)
+
+img_input = Input(shape=input_shape_img)
+roi_input = Input(shape=(C.num_rois, 4))
+feature_map_input = Input(shape=input_shape_features)
+
+# define the base network (VGG here, can be Resnet50, Inception, etc)
+shared_layers = nn_base(img_input, trainable=True)
+
+# define the RPN, built on the base layers
+num_anchors = len(C.anchor_box_scales) * len(C.anchor_box_ratios)
+rpn_layers = rpn_layer(shared_layers, num_anchors)
+
+classifier = classifier_layer(feature_map_input, roi_input, C.num_rois, nb_classes=len(C.class_mapping))
+
+model_rpn = Model(img_input, rpn_layers)
+model_classifier_only = Model([feature_map_input, roi_input], classifier)
+
+model_classifier = Model([feature_map_input, roi_input], classifier)
+
+print('Loading weights from {}'.format(C.model_path))
+model_rpn.load_weights(C.model_path, by_name=True)
+model_classifier.load_weights(C.model_path, by_name=True)
+
+model_rpn.compile(optimizer='sgd', loss='mse')
+model_classifier.compile(optimizer='sgd', loss='mse')
+
+
+# In[37]:
+
+
+class_mapping = C.class_mapping
+class_mapping = {v: k for k, v in class_mapping.items()}
+print(class_mapping)
+class_to_color = {class_mapping[v]: np.random.randint(0, 255, 3) for v in class_mapping}
+
+
+# In[38]:
+
+
+test_imgs = os.listdir(test_base_path)
+
+imgs_path = []
+for i in range(3):
+	idx = np.random.randint(len(test_imgs))
+	imgs_path.append(test_imgs[idx])
+imgs_path.append('9cf0b006-cb5c-47e7-b076-1dcacf1fbfb1.jpg')
+all_imgs = []
+
+classes = {}
+
+
+# In[58]:
+
+
+bbox_threshold = 0.30
+
+for idx, img_name in enumerate(imgs_path):
+    if not img_name.lower().endswith(('.bmp', '.jpeg', '.jpg', '.png', '.tif', '.tiff')):
+        continue
+    print(img_name)
+    st = time.time()
+    filepath = os.path.join(test_base_path, img_name)
+
+    img = cv2.imread(filepath)
+
+    X, ratio = format_img(img, C)
+    
+    X = np.transpose(X, (0, 2, 3, 1))
+
+    # get output layer Y1, Y2 from the RPN and the feature maps F
+    # Y1: y_rpn_cls
+    # Y2: y_rpn_regr
+    [Y1, Y2, F] = model_rpn.predict(X)
+
+    # Get bboxes by applying NMS 
+    # R.shape = (300, 4)
+    R = rpn_to_roi(Y1, Y2, C, K.image_dim_ordering(), overlap_thresh=0.7)
+
+    # convert from (x1,y1,x2,y2) to (x,y,w,h)
+    R[:, 2] -= R[:, 0]
+    R[:, 3] -= R[:, 1]
+
+    # apply the spatial pyramid pooling to the proposed regions
+    bboxes = {}
+    probs = {}
+
+    for jk in range(R.shape[0]//C.num_rois + 1):
+        ROIs = np.expand_dims(R[C.num_rois*jk:C.num_rois*(jk+1), :], axis=0)
+        if ROIs.shape[1] == 0:
+            break
+
+        if jk == R.shape[0]//C.num_rois:
+            #pad R
+            curr_shape = ROIs.shape
+            target_shape = (curr_shape[0],C.num_rois,curr_shape[2])
+            ROIs_padded = np.zeros(target_shape).astype(ROIs.dtype)
+            ROIs_padded[:, :curr_shape[1], :] = ROIs
+            ROIs_padded[0, curr_shape[1]:, :] = ROIs[0, 0, :]
+            ROIs = ROIs_padded
+
+        [P_cls, P_regr] = model_classifier_only.predict([F, ROIs])
+
+        # Calculate bboxes coordinates on resized image
+        for ii in range(P_cls.shape[1]):
+            # Ignore 'bg' class
+#            if np.max(P_cls[0, ii, :]) < bbox_threshold or np.argmax(P_cls[0, ii, :]) == (P_cls.shape[2] - 1):
+            if np.max(P_cls[0, ii, :]) < bbox_threshold:
+                print(np.max(P_cls[0, ii, :]) < bbox_threshold, np.argmax(P_cls[0, ii, :]) == (P_cls.shape[2] - 1), P_cls[0, ii, :])
+                continue
+
+            cls_name = class_mapping[np.argmax(P_cls[0, ii, :])]
+            print(cls_name)
+            if cls_name not in bboxes:
+                bboxes[cls_name] = []
+                probs[cls_name] = []
+
+            (x, y, w, h) = ROIs[0, ii, :]
+
+            cls_num = np.argmax(P_cls[0, ii, :])
+            try:
+                (tx, ty, tw, th) = P_regr[0, ii, 4*cls_num:4*(cls_num+1)]
+                tx /= C.classifier_regr_std[0]
+                ty /= C.classifier_regr_std[1]
+                tw /= C.classifier_regr_std[2]
+                th /= C.classifier_regr_std[3]
+                x, y, w, h = apply_regr(x, y, w, h, tx, ty, tw, th)
+            except:
+                pass
+            bboxes[cls_name].append([C.rpn_stride*x, C.rpn_stride*y, C.rpn_stride*(x+w), C.rpn_stride*(y+h)])
+            probs[cls_name].append(np.max(P_cls[0, ii, :]))
+
+    all_dets = []
+
+    for key in bboxes:
+        bbox = np.array(bboxes[key])
+
+        new_boxes, new_probs = non_max_suppression_fast(bbox, np.array(probs[key]), overlap_thresh=0.2)
+        for jk in range(new_boxes.shape[0]):
+            (x1, y1, x2, y2) = new_boxes[jk,:]
+
+            # Calculate real coordinates on original image
+            (real_x1, real_y1, real_x2, real_y2) = get_real_coordinates(ratio, x1, y1, x2, y2)
+
+            cv2.rectangle(img,(real_x1, real_y1), (real_x2, real_y2), (int(class_to_color[key][0]), int(class_to_color[key][1]), int(class_to_color[key][2])),4)
+
+            textLabel = '{}: {}'.format(key,int(100*new_probs[jk]))
+            all_dets.append((key,100*new_probs[jk]))
+
+            (retval,baseLine) = cv2.getTextSize(textLabel,cv2.FONT_HERSHEY_COMPLEX,1,1)
+            textOrg = (real_x1, real_y1-0)
+
+            cv2.rectangle(img, (textOrg[0] - 5, textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (0, 0, 0), 1)
+            cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
+            cv2.putText(img, textLabel, textOrg, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 2)
+
+    print('Elapsed time = {}'.format(time.time() - st))
+    print(all_dets)
+    plt.figure(figsize=(10,10))
+    plt.grid()
+    plt.imshow(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
+    plt.savefig('../data/p_data/bboxes/'+img_name+'bb.png', optimize=True)
+    plt.show()
+
+
+# In[ ]:
+
+
+
 
