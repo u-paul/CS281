@@ -89,8 +89,7 @@ def clean_data(simple=False):
         training = load_json(simple_train_path)
         testing  = load_json(simple_test_path)
 
-        # Only care about infected cells
-        label_names = ['infected']
+        label_names = ['red blood cell', 'infected']
     else:
         training = load_json(training_json_path)
         testing  = load_json(test_json_path)
@@ -101,25 +100,23 @@ def clean_data(simple=False):
     # Find boxes in each image and put them in a dataframe
     for item in training:
         for object in item['objects']:
-            if object['category'] != 'red blood cell':
-                train_df = train_df.append({'FileName': 'malaria' + item['image']['pathname'],
-                                            'CMin': object['bounding_box']['minimum']['c'],
-                                            'CMax': object['bounding_box']['maximum']['c'],
-                                            'RMin': object['bounding_box']['minimum']['r'],
-                                            'RMax': object['bounding_box']['maximum']['r'],
-                                            'ClassName': object['category']},
-                                            ignore_index=True)
+            train_df = train_df.append({'FileName': 'malaria' + item['image']['pathname'],
+                                        'CMin': object['bounding_box']['minimum']['c'],
+                                        'CMax': object['bounding_box']['maximum']['c'],
+                                        'RMin': object['bounding_box']['minimum']['r'],
+                                        'RMax': object['bounding_box']['maximum']['r'],
+                                        'ClassName': object['category']},
+                                        ignore_index=True)
 
     for item in testing:
         for object in item['objects']:
-            if object['category'] == 'infected':
-                test_df = test_df.append({'FileName': 'malaria' + item['image']['pathname'],
-                                            'CMin': object['bounding_box']['minimum']['c'],
-                                            'CMax': object['bounding_box']['maximum']['c'],
-                                            'RMin': object['bounding_box']['minimum']['r'],
-                                            'RMax': object['bounding_box']['maximum']['r'],
-                                            'ClassName': object['category']},
-                                            ignore_index=True)
+            test_df = test_df.append({'FileName': 'malaria' + item['image']['pathname'],
+                                        'CMin': object['bounding_box']['minimum']['c'],
+                                        'CMax': object['bounding_box']['maximum']['c'],
+                                        'RMin': object['bounding_box']['minimum']['r'],
+                                        'RMax': object['bounding_box']['maximum']['r'],
+                                        'ClassName': object['category']},
+                                        ignore_index=True)
 
     if simple:
         train_csv = 'simple_train.csv'
