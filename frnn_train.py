@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
-
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -39,10 +35,6 @@ from keras.utils import generic_utils
 from keras.engine import Layer, InputSpec
 from keras import initializers, regularizers
 
-
-# In[2]:
-
-
 class Config:
 
 	def __init__(self):
@@ -61,14 +53,14 @@ class Config:
 		# Anchor box scales
     # Note that if im_size is smaller, anchor_box_scales should be scaled
     # Original anchor_box_scales in the paper is [128, 256, 512]
-		self.anchor_box_scales = [50] 
+		self.anchor_box_scales = [32] 
 
 		# Anchor box ratios
-		self.anchor_box_ratios = [[0.75, 0.75]]
+		self.anchor_box_ratios = [[1, 1]]
 
 		# Size to resize the smallest side of the image
 		# Original setting in paper is 600. Set to 300 in here to save training time
-		self.im_size = 600
+		self.im_size = 300
 
 		# image channel-wise mean to subtract
 		self.img_channel_mean = [103.939, 116.779, 123.68]
@@ -98,9 +90,6 @@ class Config:
 		self.class_mapping = None
 
 		self.model_path = None
-
-
-# In[3]:
 
 
 def get_data(input_path):
@@ -195,10 +184,6 @@ def get_data(input_path):
 		
 		return all_data, classes_count, class_mapping
 
-
-# In[4]:
-
-
 class RoiPoolingConv(Layer):
     '''ROI pooling layer for 2D inputs.
     See Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition,
@@ -281,9 +266,6 @@ class RoiPoolingConv(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-# In[5]:
-
-
 def get_img_output_length(width, height):
     def get_output_length(input_length):
         return input_length//16
@@ -335,10 +317,6 @@ def nn_base(input_tensor=None, trainable=False):
 
     return x
 
-
-# In[6]:
-
-
 def rpn_layer(base_layers, num_anchors):
     """Create a rpn layer
         Step1: Pass through the feature map from base layer to a 3x3 512 channels convolutional layer
@@ -362,9 +340,6 @@ def rpn_layer(base_layers, num_anchors):
     x_regr = Conv2D(num_anchors * 4, (1, 1), activation='linear', kernel_initializer='zero', name='rpn_out_regress')(x)
 
     return [x_class, x_regr, base_layers]
-
-
-# In[7]:
 
 
 def classifier_layer(base_layers, input_rois, num_rois, nb_classes = 2):
@@ -392,9 +367,9 @@ def classifier_layer(base_layers, input_rois, num_rois, nb_classes = 2):
     # Flatten the convlutional layer and connected to 2 FC and 2 dropout
     out = TimeDistributed(Flatten(name='flatten'))(out_roi_pool)
     out = TimeDistributed(Dense(4096, activation='relu', name='fc1'))(out)
-    out = TimeDistributed(Dropout(0.5))(out)
+    out = TimeDistributed(Dropout(0.4))(out)
     out = TimeDistributed(Dense(4096, activation='relu', name='fc2'))(out)
-    out = TimeDistributed(Dropout(0.5))(out)
+    out = TimeDistributed(Dropout(0.4))(out)
 
     # There are two output layer
     # out_class: softmax acivation function for classify the class name of the object
@@ -404,9 +379,6 @@ def classifier_layer(base_layers, input_rois, num_rois, nb_classes = 2):
     out_regr = TimeDistributed(Dense(4 * (nb_classes-1), activation='linear', kernel_initializer='zero'), name='dense_regress_{}'.format(nb_classes))(out)
 
     return [out_class, out_regr]
-
-
-# In[8]:
 
 
 def union(au, bu, area_intersection):
@@ -436,9 +408,6 @@ def iou(a, b):
 	area_u = union(a, b, area_i)
 
 	return float(area_i) / float(area_u + 1e-6)
-
-
-# In[9]:
 
 
 def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_length_calc_function):
@@ -639,9 +608,6 @@ def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_leng
 	return np.copy(y_rpn_cls), np.copy(y_rpn_regr), num_pos
 
 
-# In[10]:
-
-
 def get_new_img_size(width, height, img_min_side=300):
 	if width <= height:
 		f = float(img_min_side) / width
@@ -724,9 +690,6 @@ def augment(img_data, config, augment=True):
 	return img_data_aug, img
 
 
-# In[11]:
-
-
 def get_anchor_gt(all_img_data, C, img_length_calc_function, mode='train'):
 	""" Yield the ground-truth anchors as Y (labels)
 		
@@ -798,9 +761,6 @@ def get_anchor_gt(all_img_data, C, img_length_calc_function, mode='train'):
 				continue
 
 
-# In[12]:
-
-
 lambda_rpn_regr = 1.0
 lambda_rpn_class = 1.0
 
@@ -808,9 +768,6 @@ lambda_cls_regr = 1.0
 lambda_cls_class = 1.0
 
 epsilon = 1e-4
-
-
-# In[13]:
 
 
 def rpn_loss_regr(num_anchors):
@@ -874,9 +831,6 @@ def class_loss_regr(num_classes):
 
 def class_loss_cls(y_true, y_pred):
     return lambda_cls_class * K.mean(categorical_crossentropy(y_true[0, :, :], y_pred[0, :, :]))
-
-
-# In[14]:
 
 
 def non_max_suppression_fast(boxes, probs, overlap_thresh=0.9, max_boxes=300):
@@ -1122,9 +1076,6 @@ def calc_iou(R, img_data, C, class_mapping):
     return np.expand_dims(X, axis=0), np.expand_dims(Y1, axis=0), np.expand_dims(Y2, axis=0), IoUs
 
 
-# In[15]:
-
-
 def rpn_to_roi(rpn_layer, regr_layer, C, dim_ordering, use_regr=True, max_boxes=300,overlap_thresh=0.9):
 	"""Convert rpn layer to roi bboxes
 
@@ -1228,9 +1179,6 @@ def rpn_to_roi(rpn_layer, regr_layer, C, dim_ordering, use_regr=True, max_boxes=
 	return result
 
 
-# In[16]:
-
-
 base_path = '../data/p_data'
 
 train_path =  '../data/p_data/annotation_IvU.txt' # Training data (annotation file)
@@ -1251,8 +1199,6 @@ base_weight_path = os.path.join(base_path, 'model/vgg16_weights_tf_dim_ordering_
 config_output_filename = os.path.join(base_path, 'model_vgg_config.pickle')
 
 
-# In[17]:
-
 
 
 # Create the config
@@ -1269,9 +1215,6 @@ C.num_rois = num_rois
 C.base_net_weights = base_weight_path
 
 
-# In[18]:
-
-
 
 #--------------------------------------------------------#
 # This step will spend some time to load the data        #
@@ -1280,9 +1223,6 @@ st = time.time()
 train_imgs, classes_count, class_mapping = get_data(train_path)
 print()
 print('Spend %0.2f mins to load the data' % ((time.time()-st)/60) )
-
-
-# In[19]:
 
 
 if 'bg' not in classes_count:
@@ -1304,8 +1244,6 @@ with open(config_output_filename, 'wb') as config_f:
 	print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(config_output_filename))
 
 
-# In[20]:
-
 
 random.seed(1)
 random.shuffle(train_imgs)
@@ -1313,20 +1251,14 @@ random.shuffle(train_imgs)
 print('Num train samples (images) {}'.format(len(train_imgs)))
 
 
-# In[21]:
-
-
 
 data_gen_train = get_anchor_gt(train_imgs, C, get_img_output_length, mode='train')
 
-
-# In[22]:
 
 
 X, Y, image_data, debug_img, debug_num_pos = next(data_gen_train)
 
 
-# In[23]:
 
 
 print('Original image: height=%d width=%d'%(image_data['height'], image_data['width']))
@@ -1390,9 +1322,9 @@ else:
 
             idx = pos_regr[2][i*4]/4
 #             anchor_size = C.anchor_box_scales[int(idx/3)]
-            anchor_size = 50
+            anchor_size = 32
 #             anchor_ratio = C.anchor_box_ratios[2-int((idx+1)%3)]
-            anchor_ratio = [[0.75, 0.75]]
+            anchor_ratio = [[1, 1]]
             center = (pos_regr[1][i*4]*C.rpn_stride, pos_regr[0][i*4]*C.rpn_stride)
             print('Center position of positive anchor: ', center)
             cv2.circle(img, center, 3, color, -1)
@@ -1409,8 +1341,6 @@ plt.imshow(img)
 plt.show()
 
 
-# In[24]:
-
 
 input_shape_img = (None, None, 3)
 
@@ -1420,8 +1350,6 @@ roi_input = Input(shape=(None, 4))
 # define the base network (VGG here, can be Resnet50, Inception, etc)
 shared_layers = nn_base(img_input, trainable=True)
 
-
-# In[25]:
 
 
 num_anchors = len(C.anchor_box_scales) * len(C.anchor_box_ratios) # 9
@@ -1472,24 +1400,20 @@ else:
     print('Already train %dK batches'% (len(record_df)))
 
 
-# In[26]:
 
-
-optimizer = Adam(lr=1e-5)
-optimizer_classifier = Adam(lr=1e-5)
+optimizer = Adam(lr=1e-9)
+optimizer_classifier = Adam(lr=1e-9)
 model_rpn.compile(optimizer=optimizer, loss=[rpn_loss_cls(num_anchors), rpn_loss_regr(num_anchors)])
 model_classifier.compile(optimizer=optimizer_classifier, loss=[class_loss_cls, class_loss_regr(len(classes_count)-1)], metrics={'dense_class_{}'.format(len(classes_count)): 'accuracy'})
 model_all.compile(optimizer='sgd', loss='mae')
 
 
-# In[27]:
-
 
 total_epochs = len(record_df)
 r_epochs = len(record_df)
 
-epoch_length = 2
-num_epochs = 100
+epoch_length = 10
+num_epochs = 500
 iter_num = 0
 
 total_epochs += num_epochs
@@ -1504,13 +1428,9 @@ else:
     best_loss = np.min(r_curr_loss)
 
 
-# In[28]:
-
 
 print(len(record_df))
 
-
-# In[29]:
 
 
 start_time = time.time()
@@ -1670,8 +1590,6 @@ for epoch_num in range(num_epochs):
 print('Training complete, exiting.')
 
 
-# In[30]:
-
 
 plt.figure(figsize=(15,5))
 plt.subplot(1,2,1)
@@ -1722,45 +1640,6 @@ plt.show()
 # plt.plot(np.arange(0, r_epochs), record_df['loss_class_regr'], 'c')
 # # plt.plot(np.arange(0, r_epochs), record_df['curr_loss'], 'm')
 # plt.show()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[31]:
 
 
 class Config:
@@ -1820,53 +1699,12 @@ class Config:
 		self.model_path = None
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[32]:
-
-
 base_path = '../data/p_data'
 
 test_path =  '../data/p_data/test_annotation.txt' # Training data (annotation file)
 test_base_path = 'malaria/images'
 config_output_filename = os.path.join(base_path, 'model_vgg_config.pickle')
 
-
-# In[33]:
 
 
 
@@ -1877,9 +1715,6 @@ with open(config_output_filename, 'rb') as f_in:
 C.use_horizontal_flips = False
 C.use_vertical_flips = False
 C.rot_90 = False
-
-
-# In[34]:
 
 
 record_df = pd.read_csv(C.record_path)
@@ -1928,8 +1763,6 @@ plt.title('elapsed_time')
 plt.show()
 
 
-# In[35]:
-
 
 def format_img_size(img, C):
 	""" formats the image size based on config """
@@ -1976,8 +1809,6 @@ def get_real_coordinates(ratio, x1, y1, x2, y2):
 	return (real_x1, real_y1, real_x2 ,real_y2)
 
 
-# In[36]:
-
 
 num_features = 512
 
@@ -2010,16 +1841,10 @@ model_rpn.compile(optimizer='sgd', loss='mse')
 model_classifier.compile(optimizer='sgd', loss='mse')
 
 
-# In[37]:
-
-
 class_mapping = C.class_mapping
 class_mapping = {v: k for k, v in class_mapping.items()}
 print(class_mapping)
 class_to_color = {class_mapping[v]: np.random.randint(0, 255, 3) for v in class_mapping}
-
-
-# In[38]:
 
 
 test_imgs = os.listdir(test_base_path)
@@ -2033,8 +1858,6 @@ all_imgs = []
 
 classes = {}
 
-
-# In[58]:
 
 
 bbox_threshold = 0.30
@@ -2145,10 +1968,4 @@ for idx, img_name in enumerate(imgs_path):
     plt.imshow(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
     plt.savefig('../data/p_data/bboxes/'+img_name+'bb.png', optimize=True)
     plt.show()
-
-
-# In[ ]:
-
-
-
 
