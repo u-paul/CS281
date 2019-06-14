@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore')
 
 random.seed()
 
-csv_path        = '../data/p_data'
+csv_path        = '../data/p_data/types'
 
 def parse_uninfected(images_csv='simple_test'):
 	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
@@ -43,15 +43,13 @@ def parse_uninfected(images_csv='simple_test'):
 		# plt.show()
 		if (i % 100 == 0):
 			print('{:<10} {}'.format('Finished', str(i)))
-		if (i == 13000):
-			return
 
 
-def parse_infected(images_csv='simple_test'):
+def parse_infected1(images_csv='test'):
 	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
 
 	df = pd.read_csv(full_csv_path)
-	df_infected = df.loc[df['ClassName'] == 'infected']
+	df_infected = df.loc[df['ClassName'] == 'ring']
 	print(df_infected.head())
 	i = 1
 	for idx, row in df_infected.iterrows():
@@ -66,7 +64,8 @@ def parse_infected(images_csv='simple_test'):
 		r90, r180, bl = augment_image(cell)
 		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
 
-		img_path = os.path.join(csv_path, 'infected', images_csv, str(i))
+		img_path = os.path.join(csv_path, 'ring', images_csv, str(i))
+		print(img_path)
 		cv2.imwrite(img_path+'.png', cell)
 		cv2.imwrite(img_path+'_90.png', r90)
 		cv2.imwrite(img_path+'_1800.png', r180)
@@ -78,6 +77,146 @@ def parse_infected(images_csv='simple_test'):
 		# plt.show()
 		if (i % 100 == 0):
 			print('{:<10} {}'.format('Finished', str(i)))
+
+
+
+def parse_infected2(images_csv='test'):
+	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
+
+	df = pd.read_csv(full_csv_path)
+	df_infected = df.loc[df['ClassName'] == 'gametocyte']
+	print(df_infected.head())
+	i = 1
+	for idx, row in df_infected.iterrows():
+		img = cv2.imread((row['FileName']))
+		# height, width = 110,130
+		x1 = int(row['CMin'] * 1)
+		x2 = int(row['CMax'] * 1)
+		y1 = int(row['RMin'] * 1)
+		y2 = int(row['RMax'] * 1)
+		cell = img[y1:y2, x1:x2]
+
+		r90, r180, bl = augment_image(cell)
+		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
+
+		img_path = os.path.join(csv_path, 'gametocyte', images_csv, str(i))
+		cv2.imwrite(img_path+'.png', cell)
+		cv2.imwrite(img_path+'_90.png', r90)
+		cv2.imwrite(img_path+'_1800.png', r180)
+		cv2.imwrite(img_path+'_bl.png', bl)
+		cv2.imwrite(img_path+'_mv.png', mv_cell)
+
+		i += 1
+		# plt.imshow(cell)
+		# plt.show()
+		if (i % 100 == 0):
+			print('{:<10} {}'.format('Finished', str(i)))
+
+
+
+def parse_infected3(images_csv='test'):
+	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
+
+	df = pd.read_csv(full_csv_path)
+	df_infected = df.loc[df['ClassName'] == 'trophozoite']
+	print(df_infected.head())
+	i = 1
+	for idx, row in df_infected.iterrows():
+		img = cv2.imread((row['FileName']))
+		# height, width = 110,130
+		x1 = int(row['CMin'] * 1)
+		x2 = int(row['CMax'] * 1)
+		y1 = int(row['RMin'] * 1)
+		y2 = int(row['RMax'] * 1)
+		cell = img[y1:y2, x1:x2]
+
+		r90, r180, bl = augment_image(cell)
+		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
+
+		img_path = os.path.join(csv_path, 'trophozoite', images_csv, str(i))
+		cv2.imwrite(img_path+'.png', cell)
+		cv2.imwrite(img_path+'_90.png', r90)
+		cv2.imwrite(img_path+'_1800.png', r180)
+		cv2.imwrite(img_path+'_bl.png', bl)
+		cv2.imwrite(img_path+'_mv.png', mv_cell)
+
+		i += 1
+		# plt.imshow(cell)
+		# plt.show()
+		if (i % 100 == 0):
+			print('{:<10} {}'.format('Finished', str(i)))
+
+
+def parse_infected4(images_csv='test'):
+	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
+
+	df = pd.read_csv(full_csv_path)
+	df_infected = df.loc[df['ClassName'] == 'schizont']
+	print(df_infected.head())
+	i = 1
+	for idx, row in df_infected.iterrows():
+		img = cv2.imread((row['FileName']))
+		# height, width = 110,130
+		x1 = int(row['CMin'] * 1)
+		x2 = int(row['CMax'] * 1)
+		y1 = int(row['RMin'] * 1)
+		y2 = int(row['RMax'] * 1)
+		cell = img[y1:y2, x1:x2]
+
+		r90, r180, bl = augment_image(cell)
+		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
+
+		img_path = os.path.join(csv_path, 'schizont', images_csv, str(i))
+		cv2.imwrite(img_path+'.png', cell)
+		cv2.imwrite(img_path+'_90.png', r90)
+		cv2.imwrite(img_path+'_1800.png', r180)
+		cv2.imwrite(img_path+'_bl.png', bl)
+		cv2.imwrite(img_path+'_mv.png', mv_cell)
+
+		i += 1
+		# plt.imshow(cell)
+		# plt.show()
+		if (i % 100 == 0):
+			print('{:<10} {}'.format('Finished', str(i)))
+
+
+
+
+def parse_infected5(images_csv='test'):
+	full_csv_path = os.path.join(csv_path, images_csv+'.csv')
+
+	df = pd.read_csv(full_csv_path)
+	df_infected = df.loc[df['ClassName'] == 'difficult']
+	print(df_infected.head())
+	i = 1
+	for idx, row in df_infected.iterrows():
+		img = cv2.imread((row['FileName']))
+		# height, width = 110,130
+		x1 = int(row['CMin'] * 1)
+		x2 = int(row['CMax'] * 1)
+		y1 = int(row['RMin'] * 1)
+		y2 = int(row['RMax'] * 1)
+		cell = img[y1:y2, x1:x2]
+
+		r90, r180, bl = augment_image(cell)
+		mv_cell      = scale_and_move(img, x1, x2, y1, y2)
+
+		img_path = os.path.join(csv_path, 'difficult', images_csv, str(i))
+		cv2.imwrite(img_path+'.png', cell)
+		cv2.imwrite(img_path+'_90.png', r90)
+		cv2.imwrite(img_path+'_1800.png', r180)
+		cv2.imwrite(img_path+'_bl.png', bl)
+		cv2.imwrite(img_path+'_mv.png', mv_cell)
+
+		i += 1
+		# plt.imshow(cell)
+		# plt.show()
+		if (i % 100 == 0):
+			print('{:<10} {}'.format('Finished', str(i)))
+
+
+
+
 
 
 def augment_image(img_array):
@@ -112,10 +251,30 @@ def scale_and_move(img, x1, x2, y1, y2):
 
 
 def main():
-	print("Splitting Infected:")
-	parse_infected('simple_train')
-	print("\n\nSplitting Uninfected:")
-	parse_uninfected('simple_train')
+	print("Splitting Infected Test:")
+	parse_infected1()
+	print('done')
+	parse_infected2()
+	print('done')
+	parse_infected3()
+	print('done')
+	parse_infected4()
+	print('done')
+	parse_infected5()
+	print('done')
+	print("Splitting Infected Train:")
+	parse_infected1('train')
+	print('done')
+	parse_infected2('train')
+	print('done')
+	parse_infected3('train')
+	print('done')
+	parse_infected4('train')
+	print('done')
+	parse_infected5('train')
+	print('done')
+	# print("\n\nSplitting Uninfected:")
+	# parse_uninfected()
 
 
 if __name__ == "__main__":
